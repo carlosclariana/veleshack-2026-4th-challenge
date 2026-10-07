@@ -1,5 +1,7 @@
 name: Validate submission
 on: [push, pull_request, workflow_dispatch]
+env:
+  TEAM_NAME: los-bocatones
 permissions:
   contents: read
 jobs:
