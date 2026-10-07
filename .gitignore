@@ -20,6 +20,8 @@ env/
 scorecard-*.json
 results*.json
 conformance-*.json
+# Archived evidence cited by the documentation is versioned.
+!results/*.json
 
 # Editors / OS
 .vscode/
@@ -27,3 +29,16 @@ conformance-*.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Large reproducible experiment outputs; compressed evidence is versioned.
+results/development.json
+results/holdout.json
+results/tuning.json
+results/benchmark.json
+results/live-seed-simulation.json
+
+# Local dashboard test dependencies and browser caches.
+.browser-tools/
+.browser-tmp/
+.browsers/
+node_modules/

@@ -126,19 +126,24 @@ class ArenaClient:
         json: Optional[dict] = None,
         auth: bool = True,
         allow_reregister: bool = True,
+        attempts: Optional[int] = None,
+        timeout: Optional[float] = None,
     ) -> Dict[str, Any]:
         url = f"{self.base_url}{path}"
         last_error: Optional[Exception] = None
 
-        for attempt in range(self.max_attempts):
+        attempt_limit = self.max_attempts if attempts is None else attempts
+        for attempt in range(attempt_limit):
             try:
                 response = self._http.request(
-                    method, url, json=json, headers=self._headers() if auth else {}
+                    method, url, json=json, headers=self._headers() if auth else {},
+                    **({"timeout": timeout} if timeout is not None else {})
                 )
             except httpx.HTTPError as exc:
                 last_error = exc
                 LOG.debug("network error on %s %s: %s", method, path, exc)
-                self._sleep_backoff(attempt, None)
+                if attempt + 1 < attempt_limit:
+                    self._sleep_backoff(attempt, None)
                 continue
 
             status = response.status_code
@@ -150,7 +155,8 @@ class ArenaClient:
 
             if status in (429, 503):
                 LOG.debug("transient %s on %s (attempt %d)", status, path, attempt + 1)
-                self._sleep_backoff(attempt, response.headers.get("retry-after"))
+                if attempt + 1 < attempt_limit:
+                    self._sleep_backoff(attempt, response.headers.get("retry-after"))
                 continue
 
             if status == 401 and auth and allow_reregister:
@@ -174,7 +180,7 @@ class ArenaClient:
             raise ArenaClientError(f"{method} {path} -> {status}: {detail}")
 
         raise ArenaClientError(
-            f"{method} {path} failed after {self.max_attempts} attempts"
+            f"{method} {path} failed after {attempt_limit} attempts"
             + (f": {last_error}" if last_error else "")
         )
 
@@ -250,11 +256,8 @@ class ArenaClient:
         Deliberately fewer retries than a bid: this is bookkeeping, not the
         critical path, and it must never eat the window for the next bid.
         """
-        saved, self.max_attempts = self.max_attempts, attempts
-        try:
-            return self._request("GET", f"/v1/result/{round_index}")
-        finally:
-            self.max_attempts = saved
+        return self._request("GET", f"/v1/result/{round_index}", attempts=attempts,
+                             timeout=0.4)
 
     # ----------------------------------------------------------------- views
     def me(self) -> Dict[str, Any]:

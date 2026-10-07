@@ -1,0 +1,38 @@
+{
+  "test_type": "DOM behaviour; not a visual browser render",
+  "passed": 8,
+  "tests": [
+    {
+      "name": "Renders live API score, rank and eligible coverage",
+      "passed": true
+    },
+    {
+      "name": "Learning and evidence tabs switch panels",
+      "passed": true
+    },
+    {
+      "name": "Presentation mode is reversible",
+      "passed": true
+    },
+    {
+      "name": "Archive is prominently labelled",
+      "passed": true
+    },
+    {
+      "name": "Export preserves source and real score",
+      "passed": true
+    },
+    {
+      "name": "Offline live data is marked stale",
+      "passed": true
+    },
+    {
+      "name": "Team names are escaped against markup injection",
+      "passed": true
+    },
+    {
+      "name": "Empty arena has an honest waiting state",
+      "passed": true
+    }
+  ]
+}

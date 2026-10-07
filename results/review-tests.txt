@@ -1,0 +1,12 @@
+test_failed_optional_read_never_sleeps_or_mutates_retry_policy (test_client.ResultReadTests.test_failed_optional_read_never_sleeps_or_mutates_retry_policy) ... ok
+test_successful_optional_read (test_client.ResultReadTests.test_successful_optional_read) ... ok
+test_client_reregisters_after_401_and_retries_original_request (test_lifecycle.LifecycleTests.test_client_reregisters_after_401_and_retries_original_request) ... ok
+test_expired_lease_reactivates_and_preserves_score (test_lifecycle.LifecycleTests.test_expired_lease_reactivates_and_preserves_score) ... ok
+test_allocation_inversion_ignores_lagged_prices (test_strategy.StrategyTests.test_allocation_inversion_ignores_lagged_prices) ... ok
+test_random_public_profiles_produce_legal_bids_without_mutation (test_strategy.StrategyTests.test_random_public_profiles_produce_legal_bids_without_mutation) ... ok
+test_zero_budget (test_strategy.StrategyTests.test_zero_budget) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.065s
+
+OK

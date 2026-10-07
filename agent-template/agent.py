@@ -130,16 +130,30 @@ def run() -> int:
             last_result_round = 0
             history.clear()
 
+        if rnd.get("settled") and total_rounds and round_index >= total_rounds:
+            _collect_result(client, history, last_bid_round, last_result_round)
+            LOG.info("arena finished after round %d", round_index)
+            break
+
         # ----------------------------------------------------- already done?
         # Bidding comes BEFORE fetching the previous result. Reading results is
         # bookkeeping; missing the bidding window is a lost round. Never put
         # anything that can block in front of the bid.
         if round_index <= last_bid_round or rnd.get("settled"):
+            if rnd.get("settled"):
+                _collect_result(client, history, last_bid_round, last_result_round)
+                last_result_round = max(last_result_round,
+                                        _last_collected(history, last_result_round))
+            _stop.wait(min(0.3, max(0.05, float(rnd.get("seconds_remaining", 0.3)))))
+            continue
+
+        # A single bounded read (400 ms, no retry/backoff) can refresh the
+        # previous result without risking the remaining bidding window.
+        # The post-bid read remains a fallback when this one fails.
+        if float(rnd.get("seconds_remaining", 0)) > 1.5:
             _collect_result(client, history, last_bid_round, last_result_round)
             last_result_round = max(last_result_round,
                                     _last_collected(history, last_result_round))
-            _stop.wait(min(0.3, max(0.05, float(rnd.get("seconds_remaining", 0.3)))))
-            continue
 
         you = rnd.get("you") or {}
         if you.get("already_submitted"):
@@ -173,6 +187,7 @@ def run() -> int:
 
         bid = _sanitise(bid, budget)
 
+        previous_bid_round = last_bid_round
         # ---------------------------------------------------------------- bid
         try:
             ack = client.post_bid(round_index, bid)
@@ -195,23 +210,12 @@ def run() -> int:
         except ArenaClientError as exc:
             LOG.warning("round %d: bid failed: %s", round_index, exc)
 
-        # ------------------------------------------------------------- finish
-        if total_rounds and round_index >= total_rounds:
-            LOG.info("final round submitted; waiting for it to settle")
-            _stop.wait(3.0)
-            try:
-                final = client.me()
-                LOG.info(
-                    "FINAL  score=%.3f  rounds=%d  missed=%d  floors=%d  kappa=%.2f",
-                    final.get("score", 0.0),
-                    final.get("rounds_participated", 0),
-                    final.get("rounds_missed", 0),
-                    final.get("floor_violations", 0),
-                    final.get("compromise", 0.0),
-                )
-            except ArenaClientError:
-                pass
-            break
+        # Collect the PREVIOUS settled bid after submitting the current one.
+        # Polling only the current bid before settlement loses the history at
+        # each round transition. Bookkeeping remains outside the critical path.
+        _collect_result(client, history, previous_bid_round, last_result_round)
+        last_result_round = max(last_result_round,
+                                _last_collected(history, last_result_round))
 
         _stop.wait(0.25)
 
@@ -228,7 +232,7 @@ def _collect_result(client: ArenaClient, history: List[Dict[str, Any]],
     if last_result_round >= last_bid_round or last_bid_round == 0:
         return
     try:
-        result = client.get_result(last_bid_round)
+        result = client.get_result(last_bid_round, attempts=1)
     except (NoRound, ArenaClientError):
         return
     if not result.get("participated"):
