@@ -8,15 +8,14 @@ A measured submission for the CoGNETs / VelesHack 2026 fourth challenge.
 
 **Dockerfile:** `agent-template/Dockerfile`. Build: `docker build -t swarm-agent:submission agent-template`
 
-**Status:** private working version. Local strategy and native tests passed. On 2026-10-07 the submission image was built with Docker on Windows and passed the official conformance suite (8/8 checks, `results/image-conformance.json`). That run used this working copy; a build from a fresh clone is still pending. Nothing has been published or submitted.
+**Status:** published public fork. GitHub Actions passed on 2026-10-07 with `TEAM_NAME=los-bocatones`: unit tests, native conformance, a Docker build from a clean checkout, and conformance against the built image. [Validation run](https://github.com/carlosclariana/veleshack-2026-4th-challenge/actions/runs/37601143158). Taikai submission is still pending.
 
 ![Independent validation](results/benchmark.png)
 
 ## Start here
 
-- [Official PDF requirements review](delivery/REVISION_INSTRUCCIONES.md)
 - [Explicación y demostración](delivery/EXPLICACION_Y_DEMO.md)
-- [Private hackathon form draft](delivery/FORMULARIO_HACKATON.md)
+- [Hackathon form draft](delivery/FORMULARIO_HACKATON.md)
 - [Delivery guide](delivery/LEEME_ENTREGA.md)
 - [Guía paso a paso en español](GUIA_EQUIPO.md)
 - [Measured results and limitations](RESULTS.md)
@@ -45,7 +44,7 @@ python -m pip install -e .
 python -m unittest discover -s tests -p 'test_*.py' -v
 python tests/conformance.py
 python experiments/benchmark.py --start 9000 --count 50
-python experiments/live_match.py --team YOUR_TEAM
+python experiments/live_match.py --team los-bocatones
 ```
 
 For the archived holdout filename, use `--output results/holdout.json` in the benchmark command.
@@ -54,10 +53,10 @@ To check the exact deliverable, build the image and run the suite against it:
 
 ```sh
 docker build -t swarm-agent:submission agent-template
-python tests/conformance.py --image swarm-agent:submission --team YOUR_TEAM
+python tests/conformance.py --image swarm-agent:submission --team los-bocatones
 ```
 
-GitHub Actions repeats both checks on a clean runner once the repository is pushed.
+GitHub Actions repeats both checks on a clean runner using `TEAM_NAME=los-bocatones`.
 
 ## Strategy write-up
 
